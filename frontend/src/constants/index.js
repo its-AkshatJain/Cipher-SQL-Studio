@@ -5,6 +5,18 @@ export const ENDPOINTS = {
   ASSIGNMENTS: '/assignments',
   EXECUTE_QUERY: '/execute',       // POST /api/execute
   GET_HINT: '/execute/hint',       // POST /api/execute/hint
+  PROGRESS: '/progress',           // GET/POST /api/progress
+};
+
+// Generate or retrieve a persistent session ID (no auth needed)
+export const getSessionId = () => {
+  const key = 'cipher_session_id';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(key, id);
+  }
+  return id;
 };
 
 // UI Constants

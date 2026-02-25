@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { connectMongoDB } from './config/db.js';
 import queryRoutes from './routes/query.routes.js';
 import assignmentRoutes from './routes/assignment.routes.js';
+import progressRoutes from './routes/progress.routes.js';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use(express.json());
 // Routes
 app.use('/api/execute', queryRoutes);
 app.use('/api/assignments', assignmentRoutes);
+app.use('/api/progress', progressRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

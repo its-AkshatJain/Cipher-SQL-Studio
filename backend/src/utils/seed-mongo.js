@@ -11,54 +11,114 @@ const ASSIGNMENTS = [
     difficulty: 'Easy',
     timeEstimate: '10 min',
     question: "Write a query to retrieve the name, role, and salary for all employees in the 'Engineering' department.",
-    schema: {
-      employees: [
-        { name: 'id',         type: 'SERIAL'  },
-        { name: 'name',       type: 'VARCHAR' },
-        { name: 'role',       type: 'VARCHAR' },
-        { name: 'department', type: 'VARCHAR' },
-        { name: 'salary',     type: 'DECIMAL' },
+    sampleTables: [
+      {
+        tableName: 'employees',
+        columns: [
+          { columnName: 'id',         dataType: 'INTEGER' },
+          { columnName: 'name',       dataType: 'TEXT'    },
+          { columnName: 'role',       dataType: 'TEXT'    },
+          { columnName: 'department', dataType: 'TEXT'    },
+          { columnName: 'salary',     dataType: 'REAL'    },
+        ],
+        rows: [
+          { id: 1, name: 'Alice Johnson', role: 'Developer', department: 'Engineering', salary: 85000 },
+          { id: 2, name: 'Bob Smith',     role: 'Designer',  department: 'Creative',    salary: 75000 },
+          { id: 3, name: 'Charlie Brown', role: 'Developer', department: 'Engineering', salary: 90000 },
+          { id: 4, name: 'Diana Prince',  role: 'Manager',   department: 'Product',     salary: 110000 },
+          { id: 5, name: 'Evan Wright',   role: 'Analyst',   department: 'Data',        salary: 65000 },
+        ],
+      },
+    ],
+    expectedOutput: {
+      type: 'table',
+      value: [
+        { name: 'Alice Johnson', role: 'Developer', salary: 85000 },
+        { name: 'Charlie Brown', role: 'Developer', salary: 90000 },
       ],
     },
-    tables: ['employees'],
   },
+
   {
     title: 'Aggregate Functions',
     description: 'Master GROUP BY and aggregate functions to perform data analysis.',
     difficulty: 'Medium',
     timeEstimate: '20 min',
-    question: 'Find the total salary expenditure for each department. Return the department name and the sum of salaries.',
-    schema: {
-      employees: [
-        { name: 'id',         type: 'SERIAL'  },
-        { name: 'name',       type: 'VARCHAR' },
-        { name: 'role',       type: 'VARCHAR' },
-        { name: 'department', type: 'VARCHAR' },
-        { name: 'salary',     type: 'DECIMAL' },
+    question: 'Find the total salary expenditure for each department. Return the department name and the sum of salaries, ordered by total salary descending.',
+    sampleTables: [
+      {
+        tableName: 'employees',
+        columns: [
+          { columnName: 'id',         dataType: 'INTEGER' },
+          { columnName: 'name',       dataType: 'TEXT'    },
+          { columnName: 'role',       dataType: 'TEXT'    },
+          { columnName: 'department', dataType: 'TEXT'    },
+          { columnName: 'salary',     dataType: 'REAL'    },
+        ],
+        rows: [
+          { id: 1, name: 'Alice Johnson', role: 'Developer', department: 'Engineering', salary: 85000 },
+          { id: 2, name: 'Bob Smith',     role: 'Designer',  department: 'Creative',    salary: 75000 },
+          { id: 3, name: 'Charlie Brown', role: 'Developer', department: 'Engineering', salary: 90000 },
+          { id: 4, name: 'Diana Prince',  role: 'Manager',   department: 'Product',     salary: 110000 },
+          { id: 5, name: 'Evan Wright',   role: 'Analyst',   department: 'Data',        salary: 65000 },
+        ],
+      },
+    ],
+    expectedOutput: {
+      type: 'table',
+      value: [
+        { department: 'Product',     total_salary: 110000 },
+        { department: 'Engineering', total_salary: 175000 },
+        { department: 'Creative',    total_salary: 75000  },
+        { department: 'Data',        total_salary: 65000  },
       ],
     },
-    tables: ['employees'],
   },
+
   {
     title: 'Complex Joins',
     description: 'Learn how to combine data from multiple tables using JOINs.',
     difficulty: 'Hard',
     timeEstimate: '35 min',
     question: 'Find all orders placed by Premium members. Return the member name, order amount, and order date.',
-    schema: {
-      users: [
-        { name: 'id',              type: 'SERIAL'  },
-        { name: 'name',            type: 'VARCHAR' },
-        { name: 'membership_type', type: 'VARCHAR' },
-      ],
-      orders: [
-        { name: 'id',         type: 'SERIAL'  },
-        { name: 'user_id',    type: 'INTEGER' },
-        { name: 'amount',     type: 'DECIMAL' },
-        { name: 'order_date', type: 'DATE'    },
+    sampleTables: [
+      {
+        tableName: 'users',
+        columns: [
+          { columnName: 'id',              dataType: 'INTEGER' },
+          { columnName: 'name',            dataType: 'TEXT'    },
+          { columnName: 'membership_type', dataType: 'TEXT'    },
+        ],
+        rows: [
+          { id: 1, name: 'Akshat Jain', membership_type: 'Premium'  },
+          { id: 2, name: 'Jane Doe',    membership_type: 'Standard' },
+          { id: 3, name: 'John Wick',   membership_type: 'Premium'  },
+        ],
+      },
+      {
+        tableName: 'orders',
+        columns: [
+          { columnName: 'id',         dataType: 'INTEGER' },
+          { columnName: 'user_id',    dataType: 'INTEGER' },
+          { columnName: 'amount',     dataType: 'REAL'    },
+          { columnName: 'order_date', dataType: 'DATE'    },
+        ],
+        rows: [
+          { id: 1, user_id: 1, amount: 150.00,  order_date: '2024-02-01' },
+          { id: 2, user_id: 1, amount: 250.00,  order_date: '2024-02-15' },
+          { id: 3, user_id: 2, amount: 45.00,   order_date: '2024-02-20' },
+          { id: 4, user_id: 3, amount: 1200.00, order_date: '2024-02-25' },
+        ],
+      },
+    ],
+    expectedOutput: {
+      type: 'table',
+      value: [
+        { name: 'Akshat Jain', amount: 150.00,  order_date: '2024-02-01' },
+        { name: 'Akshat Jain', amount: 250.00,  order_date: '2024-02-15' },
+        { name: 'John Wick',   amount: 1200.00, order_date: '2024-02-25' },
       ],
     },
-    tables: ['users', 'orders'],
   },
 ];
 
@@ -72,12 +132,12 @@ const seed = async () => {
 
     const inserted = await Assignment.insertMany(ASSIGNMENTS);
     console.log(`✅ Seeded ${inserted.length} assignments into MongoDB`);
-    inserted.forEach(a => console.log(`   • [${a._id}] ${a.title}`));
+    inserted.forEach(a => console.log(`   • [${a._id}] ${a.title} (${a.difficulty})`));
   } catch (err) {
     console.error('❌ Seed failed:', err.message);
+    process.exit(1);
   } finally {
     await mongoose.disconnect();
-    console.log('Disconnected from MongoDB');
     process.exit(0);
   }
 };
