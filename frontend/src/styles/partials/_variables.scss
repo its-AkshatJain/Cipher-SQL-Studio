@@ -1,0 +1,25 @@
+// Color Palette
+$primary: #6366f1; // Indigo
+$primary-dark: #4f46e5;
+$secondary: #10b981; // Emerald
+$accent: #f59e0b; // Amber
+
+// Neutrals
+$bg-dark: #0f172a; // Slate 900
+$bg-card: #1e293b; // Slate 800
+$text-main: #f8fafc;
+$text-muted: #94a3b8;
+$border: #334155;
+
+// Breakpoints
+$breakpoint-mobile: 320px;
+$breakpoint-tablet: 641px;
+$breakpoint-laptop: 1024px;
+$breakpoint-desktop: 1281px;
+
+// Typography
+$font-main: 'Inter', system-ui, -apple-system, sans-serif;
+$font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+// Transitions
+$transition-base: 0.2s ease-in-out;

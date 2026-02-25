@@ -1,0 +1,4 @@
+/* index.css - minimal base reset only, main.scss handles all app styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+}

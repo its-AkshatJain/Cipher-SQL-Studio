@@ -1,0 +1,91 @@
+@use '../styles/partials/variables' as *;
+@use '../styles/partials/mixins' as *;
+
+.assignments {
+  padding: 3rem 0;
+
+  &__header {
+    margin-bottom: 3rem;
+  }
+
+  &__title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, $text-main, $text-muted);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  &__subtitle {
+    color: $text-muted;
+    font-size: 1.1rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+
+    @include respond-to("tablet") {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include respond-to("laptop") {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+}
+
+.card {
+  @include glass-panel;
+  padding: 1.5rem;
+  transition: $transition-base;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: rgba($primary, 0.4);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  &__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba($primary, 0.1);
+    color: $primary;
+    @include flex-center;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+
+  &__desc {
+    color: $text-muted;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid $border;
+  }
+}

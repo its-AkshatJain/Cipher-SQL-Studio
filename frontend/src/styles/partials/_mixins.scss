@@ -1,0 +1,28 @@
+@use './variables' as *;
+
+// Mobile-first responsive mixin
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == "tablet" {
+    @media (min-width: $breakpoint-tablet) { @content; }
+  } @else if $breakpoint == "laptop" {
+    @media (min-width: $breakpoint-laptop) { @content; }
+  } @else if $breakpoint == "desktop" {
+    @media (min-width: $breakpoint-desktop) { @content; }
+  }
+}
+
+// Glassmorphism effect
+@mixin glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+// Flex center
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

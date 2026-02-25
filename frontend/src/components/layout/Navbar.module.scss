@@ -1,0 +1,58 @@
+@use '../../styles/partials/variables' as *;
+@use '../../styles/partials/mixins' as *;
+
+.navbar {
+  height: 64px;
+  @include glass-panel;
+  border-radius: 0;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  &__container {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    background: linear-gradient(to right, $primary, $secondary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    svg {
+      color: $primary;
+      -webkit-text-fill-color: initial;
+    }
+  }
+
+  &__nav {
+    display: none;
+    @include respond-to("tablet") {
+      display: flex;
+      gap: 1.5rem;
+    }
+  }
+
+  &__link {
+    color: $text-muted;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: $transition-base;
+
+    &:hover, &--active {
+      color: $text-main;
+    }
+  }
+}
