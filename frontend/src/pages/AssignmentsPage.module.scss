@@ -52,6 +52,15 @@
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
   }
 
+  // Solved state — green accent border
+  &--solved {
+    border-color: rgba($secondary, 0.35);
+
+    &:hover {
+      border-color: rgba($secondary, 0.6);
+    }
+  }
+
   &__header {
     display: flex;
     justify-content: space-between;
@@ -66,6 +75,25 @@
     background: rgba($primary, 0.1);
     color: $primary;
     @include flex-center;
+
+    &--solved {
+      background: rgba($secondary, 0.12);
+      color: $secondary;
+    }
+  }
+
+  // "✓ Solved" tag pill
+  &__solvedTag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: $secondary;
+    background: rgba($secondary, 0.1);
+    border: 1px solid rgba($secondary, 0.25);
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+    align-self: flex-start;
   }
 
   &__title {
@@ -87,5 +115,50 @@
     align-items: center;
     padding-top: 1rem;
     border-top: 1px solid $border;
+  }
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__metaItem {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    color: $text-muted;
+  }
+}
+
+// ── Progress Summary Bar ──────────────────────────────────────────────────────
+.progressSummary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+
+  &__bar {
+    flex: 1;
+    max-width: 220px;
+    height: 6px;
+    background: rgba($border, 0.4);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  &__fill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, $primary, $secondary);
+    border-radius: 999px;
+    transition: width 0.5s ease;
+  }
+
+  &__text {
+    font-size: 0.8rem;
+    color: $text-muted;
+    white-space: nowrap;
   }
 }

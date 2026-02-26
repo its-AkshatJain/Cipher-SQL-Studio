@@ -352,6 +352,62 @@
   text-decoration: underline;
 }
 
+// ── Resize Divider ────────────────────────────────────────────────────────────
+.resizeDivider {
+  height: 8px;
+  flex-shrink: 0;
+  background: $bg-dark;
+  border-top: 1px solid $border;
+  border-bottom: 1px solid $border;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+
+  &:hover, &:active {
+    background: rgba($primary, 0.12);
+    border-color: rgba($primary, 0.3);
+  }
+
+  &__grip {
+    display: block;
+    width: 32px;
+    height: 3px;
+    border-radius: 999px;
+    background: rgba($border, 0.6);
+
+    .resizeDivider:hover &,
+    .resizeDivider:active & {
+      background: rgba($primary, 0.6);
+    }
+  }
+}
+
+// ── Feedback Banner ───────────────────────────────────────────────────────────
+.feedbackBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  flex-shrink: 0;
+  border-bottom: 1px solid transparent;
+
+  &--ok {
+    background: rgba($secondary, 0.1);
+    border-color: rgba($secondary, 0.25);
+    color: $secondary;
+  }
+
+  &--err {
+    background: rgba(#ef4444, 0.08);
+    border-color: rgba(#ef4444, 0.2);
+    color: #ef4444;
+  }
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }

@@ -1,0 +1,236 @@
+@use 'sass:color';
+@use '../styles/partials/variables' as *;
+@use '../styles/partials/mixins' as *;
+
+// ── Page wrapper ──────────────────────────────────────────────────────────────
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 6rem;
+  width: 100%;
+}
+
+// ── Hero ──────────────────────────────────────────────────────────────────────
+.hero {
+  position: relative;
+  text-align: center;
+  padding: 5rem 1rem 4rem;
+  overflow: hidden;
+}
+
+.heroGlow {
+  position: absolute;
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse at center, rgba($primary, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 1rem;
+  border: 1px solid rgba($primary, 0.3);
+  background: rgba($primary, 0.08);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $primary;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: $primary;
+    animation: pulse 2s ease-in-out infinite;
+  }
+}
+
+.heroTitle {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 900;
+  color: $text-main;
+  line-height: 1.15;
+  margin-bottom: 1.25rem;
+
+  &__accent {
+    background: linear-gradient(135deg, $primary 0%, $secondary 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+.heroSub {
+  font-size: 1.05rem;
+  color: $text-muted;
+  max-width: 580px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.7;
+}
+
+.heroCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+// ── Generic Section ───────────────────────────────────────────────────────────
+.section {
+  margin-bottom: 4rem;
+
+  &__title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: $text-main;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid $border;
+  }
+}
+
+// ── Feature Cards ─────────────────────────────────────────────────────────────
+.featureGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+
+  @include respond-to('tablet') {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.featureCard {
+  @include glass-panel;
+  padding: 1.5rem;
+  border-radius: 12px;
+  transition: transform $transition-base, border-color $transition-base;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba($primary, 0.3);
+  }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba($primary, 0.1);
+    color: $primary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text-main;
+    margin-bottom: 0.5rem;
+  }
+
+  &__desc {
+    font-size: 0.875rem;
+    color: $text-muted;
+    line-height: 1.65;
+  }
+}
+
+// ── Tech Stack Table ──────────────────────────────────────────────────────────
+.stackGrid {
+  @include glass-panel;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.stackRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid $border;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: rgba($primary, 0.04); }
+
+  &__label {
+    font-size: 0.85rem;
+    color: $text-muted;
+    font-weight: 500;
+  }
+
+  &__value {
+    font-size: 0.85rem;
+    font-family: $font-mono;
+    color: $secondary;
+    font-weight: 600;
+  }
+}
+
+// ── Data Flow ─────────────────────────────────────────────────────────────────
+.flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  @include glass-panel;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.flowStep {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid $border;
+  transition: background $transition-base;
+
+  &:last-child { border-bottom: none; }
+
+  &:hover { background: rgba($primary, 0.05); }
+
+  &__num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba($primary, 0.15);
+    color: $primary;
+    font-size: 0.72rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__text {
+    font-size: 0.875rem;
+    color: $text-muted;
+    font-family: $font-mono;
+    line-height: 1.5;
+  }
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+.footer {
+  text-align: center;
+  padding-top: 3rem;
+  font-size: 0.82rem;
+  color: rgba($text-muted, 0.5);
+  border-top: 1px solid $border;
+}
+
+// ── Animations ────────────────────────────────────────────────────────────────
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1);   }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}

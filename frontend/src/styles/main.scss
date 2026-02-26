@@ -33,13 +33,45 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0; // Critical: allows children to shrink in flex context
-  overflow: hidden;
+  min-height: 0;          // allows children to shrink in flex context
+  overflow-y: auto;       // pages like homepage can scroll; AttemptPage manages its own
+  overflow-x: hidden;
 }
 
 a {
   text-decoration: none;
   color: inherit;
+}
+
+// ── Custom Scrollbars ─────────────────────────────────────────────────────────
+// Applies to all scrollable elements; thin, elegant, dark-themed
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba($primary, 0.35);
+  border-radius: 999px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba($primary, 0.65);
+  }
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+// Firefox scrollbar (limited but consistent)
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba($primary, 0.35) transparent;
 }
 
 button {

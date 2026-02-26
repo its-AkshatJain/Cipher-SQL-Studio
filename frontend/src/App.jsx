@@ -3,18 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import AssignmentsPage from './pages/AssignmentsPage';
 import AttemptPage from './pages/AttemptPage';
+import AboutPage from './pages/AboutPage';
 import './styles/main.scss';
-
-const AboutPage = () => (
-  <div className="container" style={{ padding: '4rem 0' }}>
-    <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '1rem' }}>About CipherSQL Studio</h1>
-    <p style={{ color: '#94a3b8', fontSize: '1.2rem', maxWidth: '600px', lineHeight: '1.6' }}>
-      CipherSQL Studio is a premium platform designed for developers and data analysts 
-      to master SQL through interactive, real-world scenarios. Our sandbox environment 
-      provides instant feedback and AI-powered hints to accelerate your learning journey.
-    </p>
-  </div>
-);
 
 function App() {
   return (

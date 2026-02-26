@@ -1,33 +1,44 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, ArrowRight, Clock, Loader2 } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
+import { BookOpen, ArrowRight, Clock, Loader2, CheckCircle2 } from 'lucide-react';
 import styles from './AssignmentsPage.module.scss';
-import { AssignmentService } from '../services/api';
+import { AssignmentService, ProgressService } from '../services/api';
 
-const AssignmentCard = ({ assignment }) => {
+// ── Assignment Card ───────────────────────────────────────────────────────────
+const AssignmentCard = ({ assignment, solved, attemptCount }) => {
   const difficulty = assignment.difficulty || 'Easy';
   const badgeClass = `badge--${difficulty.toLowerCase()}`;
 
   return (
-    <div className={styles.card}>
+    <div className={`${styles.card} ${solved ? styles['card--solved'] : ''}`}>
       <div className={styles.card__header}>
-        <div className={styles.card__icon}>
-          <BookOpen size={20} />
+        <div className={`${styles.card__icon} ${solved ? styles['card__icon--solved'] : ''}`}>
+          {solved ? <CheckCircle2 size={20} /> : <BookOpen size={20} />}
         </div>
         <span className={`badge ${badgeClass}`}>{difficulty}</span>
       </div>
-      
+
+      {solved && (
+        <div className={styles.card__solvedTag}>✓ Solved</div>
+      )}
+
       <h3 className={styles.card__title}>{assignment.title}</h3>
       <p className={styles.card__desc}>{assignment.description}</p>
-      
+
       <div className={styles.card__footer}>
         <div className={styles.card__meta}>
           <span className={styles.card__metaItem}>
             <Clock size={14} /> {assignment.timeEstimate || '20 min'}
           </span>
+          {attemptCount > 0 && (
+            <span className={styles.card__metaItem}>
+              {attemptCount} attempt{attemptCount !== 1 ? 's' : ''}
+            </span>
+          )}
         </div>
-        <Link to={`/attempt/${assignment.id}`} className="btn btn--primary btn--sm">
-          <span>Attempt</span>
+        <Link to={`/attempt/${assignment.id}`} className={`btn btn--sm ${solved ? 'btn--ghost' : 'btn--primary'}`}>
+          <span>{solved ? 'Review' : 'Attempt'}</span>
           <ArrowRight size={16} />
         </Link>
       </div>
@@ -35,16 +46,25 @@ const AssignmentCard = ({ assignment }) => {
   );
 };
 
+// ── Page ──────────────────────────────────────────────────────────────────────
 const AssignmentsPage = () => {
-  const [assignments, setAssignments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { userId: clerkUserId } = useAuth();
+  const userId = clerkUserId ?? (localStorage.getItem('cipher_session_id') || null);
+
+  const [assignments, setAssignments]   = useState([]);
+  const [progressMap, setProgressMap]   = useState({}); // { assignmentId: { isCompleted, attemptCount } }
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(null);
 
   useEffect(() => {
-    const fetchAssignments = async () => {
+    const fetchAll = async () => {
       try {
-        const data = await AssignmentService.getAssignments();
+        const [data, progress] = await Promise.all([
+          AssignmentService.getAssignments(),
+          userId ? ProgressService.getAll(userId) : {},
+        ]);
         setAssignments(data);
+        setProgressMap(progress);
       } catch (err) {
         setError('Failed to load assignments. Please check if the backend is running.');
         console.error(err);
@@ -53,8 +73,10 @@ const AssignmentsPage = () => {
       }
     };
 
-    fetchAssignments();
-  }, []);
+    fetchAll();
+  }, [userId]);
+
+  const solvedCount = Object.values(progressMap).filter(p => p.isCompleted).length;
 
   if (loading) {
     return (
@@ -82,12 +104,33 @@ const AssignmentsPage = () => {
           <p className={styles.assignments__subtitle}>
             Practice your SQL skills with real-world scenarios and interactive datasets.
           </p>
+          {userId && assignments.length > 0 && (
+            <div className={styles.progressSummary}>
+              <span className={styles.progressSummary__bar}>
+                <span
+                  className={styles.progressSummary__fill}
+                  style={{ width: `${(solvedCount / assignments.length) * 100}%` }}
+                />
+              </span>
+              <span className={styles.progressSummary__text}>
+                {solvedCount} / {assignments.length} solved
+              </span>
+            </div>
+          )}
         </header>
 
         <div className={styles.assignments__grid}>
-          {assignments.map((assignment) => (
-            <AssignmentCard key={assignment.id} assignment={assignment} />
-          ))}
+          {assignments.map((assignment) => {
+            const p = progressMap[String(assignment.id)] ?? {};
+            return (
+              <AssignmentCard
+                key={assignment.id}
+                assignment={assignment}
+                solved={p.isCompleted ?? false}
+                attemptCount={p.attemptCount ?? 0}
+              />
+            );
+          })}
         </div>
       </div>
     </main>

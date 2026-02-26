@@ -6,6 +6,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.2",
     "@monaco-editor/react": "^4.7.0",
     "axios": "^1.13.5",
     "lucide-react": "^0.575.0",

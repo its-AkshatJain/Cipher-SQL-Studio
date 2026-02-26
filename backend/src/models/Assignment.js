@@ -28,9 +28,10 @@ const assignmentSchema = new mongoose.Schema({
   difficulty:     { type: String, enum: ['Easy', 'Medium', 'Hard'], required: true },
   timeEstimate:   { type: String, default: '' },
   question:       { type: String, required: true },
+  pgSchema:       { type: String, required: true }, // PostgreSQL schema name for isolated sandbox data
   sampleTables:   [sampleTableSchema],
   expectedOutput: expectedOutputSchema,
-}, { timestamps: true }); // adds createdAt + updatedAt automatically
+}, { timestamps: true });
 
 const Assignment = mongoose.model('Assignment', assignmentSchema);
 export default Assignment;

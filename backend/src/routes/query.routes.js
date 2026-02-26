@@ -6,12 +6,12 @@ const router = express.Router();
 
 router.post('/', async (req, res) => {
   try {
-    const { sql } = req.body;
+    const { sql, pgSchema } = req.body;
     if (!sql) {
       return res.status(400).json({ success: false, message: 'SQL query is required' });
     }
 
-    const result = await QueryService.executeQuery(sql);
+    const result = await QueryService.executeQuery(sql, pgSchema);
     res.json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

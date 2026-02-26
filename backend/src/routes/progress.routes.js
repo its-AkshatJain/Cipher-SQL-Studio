@@ -4,6 +4,20 @@ import UserProgress from '../models/UserProgress.js';
 const router = express.Router();
 
 /**
+ * GET /api/progress/user/:userId
+ * Fetch all progress records for a given user (for the assignments list page)
+ */
+router.get('/user/:userId', async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const records = await UserProgress.find({ userId }).lean();
+    res.json({ success: true, data: records });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * GET /api/progress/:sessionId/:assignmentId
  * Load a user's saved progress for a specific assignment
  */

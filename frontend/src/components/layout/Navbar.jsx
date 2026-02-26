@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Database, Layout } from 'lucide-react';
+import { Database } from 'lucide-react';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 import styles from './Navbar.module.scss';
 
 const Navbar = () => {
@@ -13,17 +14,17 @@ const Navbar = () => {
         </Link>
 
         <nav className={styles.navbar__nav}>
-          <NavLink 
-            to="/" 
-            className={({ isActive }) => 
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
               `${styles.navbar__link} ${isActive ? styles['navbar__link--active'] : ''}`
             }
           >
             Assignments
           </NavLink>
-          <NavLink 
-            to="/about" 
-            className={({ isActive }) => 
+          <NavLink
+            to="/about"
+            className={({ isActive }) =>
               `${styles.navbar__link} ${isActive ? styles['navbar__link--active'] : ''}`
             }
           >
@@ -32,10 +33,23 @@ const Navbar = () => {
         </nav>
 
         <div className={styles.navbar__actions}>
-          <button className="btn btn--ghost">
-            <Layout size={18} />
-            <span>Dashboard</span>
-          </button>
+          {/* Show Sign In button when logged out */}
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="btn btn--primary btn--sm">Sign In</button>
+            </SignInButton>
+          </SignedOut>
+
+          {/* Show user avatar + sign-out when logged in */}
+          <SignedIn>
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: { width: '32px', height: '32px' },
+                },
+              }}
+            />
+          </SignedIn>
         </div>
       </div>
     </header>

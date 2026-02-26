@@ -11,6 +11,7 @@ const ASSIGNMENTS = [
     description: 'Filter rows using a WHERE clause with a numeric condition to find employees above a salary threshold.',
     difficulty: 'Easy',
     timeEstimate: '10 min',
+    pgSchema: 'asgn_high_salary',
     question: 'List all employees earning more than 50,000.',
     sampleTables: [
       {
@@ -43,6 +44,7 @@ const ASSIGNMENTS = [
     description: 'Use GROUP BY with COUNT() to aggregate employee data by department.',
     difficulty: 'Medium',
     timeEstimate: '20 min',
+    pgSchema: 'asgn_dept_count',
     question: 'Find the number of employees in each department.',
     sampleTables: [
       {
@@ -76,6 +78,7 @@ const ASSIGNMENTS = [
     description: 'Join two tables and use SUM() with GROUP BY to aggregate order amounts per customer.',
     difficulty: 'Medium',
     timeEstimate: '25 min',
+    pgSchema: 'asgn_order_value',
     question: 'Find total order value for each customer.',
     sampleTables: [
       {
@@ -117,6 +120,7 @@ const ASSIGNMENTS = [
     description: 'Use a subquery or MAX() to find the employee(s) who earn the maximum salary.',
     difficulty: 'Hard',
     timeEstimate: '30 min',
+    pgSchema: 'asgn_highest_paid',
     question: 'Find the employee(s) with the highest salary.',
     sampleTables: [
       {

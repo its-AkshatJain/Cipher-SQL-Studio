@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 import Editor from '@monaco-editor/react';
 import {
   Play, Lightbulb, Database, Table, HelpCircle,
@@ -22,6 +23,11 @@ const useDebounce = (fn, delay) => {
 // ── Main Component ────────────────────────────────────────────────────────────
 const AttemptPage = () => {
   const { id } = useParams();
+  const { userId: clerkUserId } = useAuth();
+
+  // Use Clerk userId if signed in, otherwise fall back to a device sessionId
+  const userId = clerkUserId ?? (localStorage.getItem('cipher_session_id') ||
+    (() => { const s = crypto.randomUUID(); localStorage.setItem('cipher_session_id', s); return s; })());
 
   const [assignment, setAssignment]   = useState(null);
   const [query, setQuery]             = useState('-- Write your SQL query here\n');
@@ -33,15 +39,36 @@ const AttemptPage = () => {
   const [attemptCount, setAttemptCount] = useState(0);
   const [queryError, setQueryError]   = useState(null);
   const [fetchError, setFetchError]   = useState(null);
-  const [saveStatus, setSaveStatus]   = useState(''); // 'saving' | 'saved' | ''
+  const [saveStatus, setSaveStatus]   = useState('');
+  const [feedbackMsg, setFeedbackMsg] = useState(null); // { ok: bool, text: string }
+
+  // ── Resizable results panel ──────────────────────────────────────────────────
+  const [resultsHeight, setResultsHeight] = useState(220);
+  const dragRef = useRef(null);
+
+  const startResize = (e) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = resultsHeight;
+    const onMove = (ev) => {
+      const delta = startY - ev.clientY; // drag up = bigger results
+      setResultsHeight(Math.max(80, Math.min(600, startH + delta)));
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
 
   // ── Save progress to MongoDB (debounced) ────────────────────────────────────
   const persistProgress = useCallback(async (q, solved) => {
     setSaveStatus('saving');
-    await ProgressService.save(id, { sqlQuery: q, isCompleted: solved });
+    await ProgressService.save(userId, id, { sqlQuery: q, isCompleted: solved });
     setSaveStatus('saved');
     setTimeout(() => setSaveStatus(''), 2000);
-  }, [id]);
+  }, [id, userId]);
 
   const debouncedSave = useDebounce(persistProgress, DEBOUNCE_MS);
 
@@ -55,7 +82,7 @@ const AttemptPage = () => {
       try {
         const [data, progress] = await Promise.all([
           AssignmentService.getAssignmentById(id),
-          ProgressService.load(id),
+          ProgressService.load(userId, id),
         ]);
 
         if (cancelled) return;
@@ -79,20 +106,22 @@ const AttemptPage = () => {
     })();
 
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, userId]);
 
   // ── Execute SQL ─────────────────────────────────────────────────────────────
   const handleExecute = async () => {
     setExecuting(true);
     setQueryError(null);
+    setFeedbackMsg(null);
     try {
-      const data = await QueryService.execute(query);
+      const data = await QueryService.execute(query, assignment?.pgSchema);
       setResults(data);
       setAttemptCount(c => c + 1);
 
-      // Simple answer check against expectedOutput
-      const solved = checkAnswer(data, assignment?.expectedOutput);
+      // Detailed answer check
+      const { solved, message } = checkAnswer(data, assignment?.expectedOutput);
       setIsSolved(solved);
+      setFeedbackMsg({ ok: solved, text: message });
 
       // Persist to MongoDB immediately on execute
       await persistProgress(query, solved);
@@ -113,6 +142,7 @@ const AttemptPage = () => {
     setHint('');
     setQueryError(null);
     setIsSolved(false);
+    setFeedbackMsg(null);
     await ProgressService.save(id, { sqlQuery: starter, isCompleted: false });
   };
 
@@ -133,33 +163,62 @@ const AttemptPage = () => {
   };
 
   // ── Answer Checking ─────────────────────────────────────────────────────────
+  // Returns { solved: bool, message: string } with specific feedback
   const checkAnswer = (queryResult, expected) => {
-    if (!expected || !queryResult?.rows?.length) return false;
+    const rows = queryResult?.rows ?? [];
 
-    const rows = queryResult.rows;
+    if (!expected) {
+      return { solved: false, message: `Query executed — ${rows.length} row${rows.length !== 1 ? 's' : ''} returned. (No expected output configured.)` };
+    }
+
     const { type, value } = expected;
 
     try {
       if (type === 'count') {
-        return rows[0]?.count === value || queryResult.rowCount === value;
+        const actual = rows[0]?.count ?? queryResult.rowCount;
+        const ok = String(actual) === String(value);
+        return ok
+          ? { solved: true,  message: `✓ Correct! Count matches: ${value}.` }
+          : { solved: false, message: `✗ Incorrect. Expected count ${value}, got ${actual}.` };
       }
+
       if (type === 'single_value') {
-        const first = Object.values(rows[0] ?? {})[0];
-        return String(first) === String(value);
+        const actual = Object.values(rows[0] ?? {})[0];
+        const ok = String(actual) === String(value);
+        return ok
+          ? { solved: true,  message: `✓ Correct! Value matches: ${value}.` }
+          : { solved: false, message: `✗ Incorrect. Expected "${value}", got "${actual}".` };
       }
+
       if (type === 'table') {
-        if (rows.length !== value.length) return false;
-        // Check that every expected row exists in results (order-independent)
-        return value.every(expectedRow =>
+        if (!rows.length) {
+          return { solved: false, message: `✗ Your query returned 0 rows. Expected ${value.length} row${value.length !== 1 ? 's' : ''}.` };
+        }
+        if (rows.length !== value.length) {
+          return { solved: false, message: `✗ Row count mismatch — got ${rows.length}, expected ${value.length}.` };
+        }
+        // Check columns
+        const expectedCols = Object.keys(value[0]);
+        const actualCols   = Object.keys(rows[0]);
+        const missingCols  = expectedCols.filter(c => !actualCols.includes(c));
+        if (missingCols.length) {
+          return { solved: false, message: `✗ Missing column${missingCols.length > 1 ? 's' : ''}: ${missingCols.join(', ')}.` };
+        }
+        // Check values (order-independent)
+        const allMatch = value.every(expectedRow =>
           rows.some(row =>
-            Object.keys(expectedRow).every(
-              k => String(row[k]) === String(expectedRow[k])
-            )
+            Object.keys(expectedRow).every(k => String(row[k]) === String(expectedRow[k]))
           )
         );
+        return allMatch
+          ? { solved: true,  message: `✓ Correct! All ${rows.length} rows match the expected output.` }
+          : { solved: false, message: `✗ Columns are right but some values don't match the expected output. Double-check your filters.` };
       }
-    } catch { return false; }
-    return false;
+    } catch (e) {
+      return { solved: false, message: 'Could not verify answer.' };
+    }
+
+    return { solved: false, message: `Query ran — ${rows.length} row${rows.length !== 1 ? 's' : ''} returned.` };
   };
 
   // ── Loading ─────────────────────────────────────────────────────────────────
@@ -332,7 +391,7 @@ const AttemptPage = () => {
             onChange={(val) => {
               const v = val ?? '';
               setQuery(v);
-              debouncedSave(v, isSolved); // autosave to MongoDB
+              debouncedSave(v, isSolved);
             }}
             options={{
               minimap: { enabled: false },
@@ -347,8 +406,29 @@ const AttemptPage = () => {
           />
         </div>
 
+        {/* Drag-to-resize divider */}
+        <div
+          ref={dragRef}
+          className={styles.resizeDivider}
+          onMouseDown={startResize}
+          title="Drag to resize panels"
+        >
+          <span className={styles.resizeDivider__grip} />
+        </div>
+
+        {/* Feedback banner */}
+        {feedbackMsg && (
+          <div className={`${styles.feedbackBanner} ${feedbackMsg.ok ? styles['feedbackBanner--ok'] : styles['feedbackBanner--err']}`}>
+            {feedbackMsg.ok
+              ? <CheckCircle2 size={15} style={{ flexShrink: 0 }} />
+              : <AlertCircle size={15} style={{ flexShrink: 0 }} />
+            }
+            <span>{feedbackMsg.text}</span>
+          </div>
+        )}
+
         {/* Results Panel */}
-        <div className={styles.results}>
+        <div className={styles.results} style={{ height: resultsHeight }}>
           <div className={styles.resultsHeader}>
             <Table size={14} /> Result Set
             {results && (

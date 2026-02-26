@@ -1,50 +1,57 @@
 import { pgPool } from '../config/db.js';
 
+// Safe schema name whitelist — only allowed schema names can be used
+const ALLOWED_SCHEMAS = new Set([
+  'asgn_high_salary',
+  'asgn_dept_count',
+  'asgn_order_value',
+  'asgn_highest_paid',
+]);
+
 class QueryService {
   /**
-   * Execute a query in a transaction and roll back to prevent permanent changes to sandbox
+   * Execute a SQL query inside an isolated assignment schema.
+   * Uses ROLLBACK after execution so students can't permanently mutate shared data.
+   * @param {string} sql         - The SQL query from the student
+   * @param {string} pgSchema    - The PostgreSQL schema name for this assignment
    */
-  async executeQuery(sql) {
-    const client = await pgPool.connect();
-    
-    try {
-      // Basic validation: Prevention of administrative commands
-      const forbidden = ['DROP', 'TRUNCATE', 'ALTER', 'GRANT', 'REVOKE', 'CREATE USER', 'CREATE DATABASE'];
-      if (forbidden.some(word => sql.toUpperCase().includes(word))) {
-        throw new Error('This operation is not permitted in the sandbox.');
-      }
+  async executeQuery(sql, pgSchema = 'public') {
+    // Validate schema name to prevent SQL injection via search_path
+    if (!ALLOWED_SCHEMAS.has(pgSchema)) {
+      throw new Error(`Invalid schema: "${pgSchema}". Query execution aborted.`);
+    }
 
+    // Basic command-level validation: block destructive DDL
+    const forbidden = ['DROP', 'TRUNCATE', 'ALTER', 'GRANT', 'REVOKE', 'CREATE USER', 'CREATE DATABASE', 'CREATE SCHEMA'];
+    const upperSQL = sql.toUpperCase().trim();
+    if (forbidden.some(word => upperSQL.includes(word))) {
+      throw new Error('This operation is not permitted in the sandbox.');
+    }
+
+    const client = await pgPool.connect();
+    try {
       await client.query('BEGIN');
-      
+
+      // Set search_path to the assignment's isolated schema
+      // Students write "SELECT * FROM employees" and it resolves to the right schema
+      await client.query(`SET LOCAL search_path TO ${pgSchema}, public;`);
+
       const result = await client.query(sql);
-      
-      // We ROLLBACK because this is a learning platform and we don't want 
-      // users to permanently alter the sample data for others.
-      // If we want to allow writes for a specific session, we'd need a per-user schema.
+
+      // ROLLBACK: learning platform — don't let writes persist
       await client.query('ROLLBACK');
-      
+
       return {
-        rows: result.rows,
+        rows:     result.rows,
         rowCount: result.rowCount,
-        fields: result.fields?.map(f => f.name) || []
+        fields:   result.fields?.map(f => f.name) || [],
       };
     } catch (error) {
-      if (client) await client.query('ROLLBACK');
+      await client.query('ROLLBACK').catch(() => {});
       throw error;
     } finally {
       client.release();
     }
-  }
-
-  async getTableSchema(tableName) {
-    const sql = `
-      SELECT column_name, data_type 
-      FROM information_schema.columns 
-      WHERE table_name = $1
-      ORDER BY ordinal_position;
-    `;
-    const result = await pgPool.query(sql, [tableName]);
-    return result.rows;
   }
 }
 
