@@ -53,14 +53,15 @@ export const ProgressService = {
    * @param {string} assignmentId - MongoDB ObjectId
    * @param {{ sqlQuery: string, isCompleted: boolean }} data
    */
-  save: async (userId, assignmentId, { sqlQuery, isCompleted = false }) => {
+  save: async (userId, assignmentId, { sqlQuery, isCompleted = false, incrementAttempt = false }) => {
     if (!userId) return null;
     try {
       const response = await api.post(ENDPOINTS.PROGRESS, {
-        sessionId: userId,    // backend field name stays 'sessionId' → maps to userId in DB
+        sessionId: userId,
         assignmentId,
         sqlQuery,
         isCompleted,
+        incrementAttempt,   // only true when user clicks "Run Query"
       });
       return response.data.data;
     } catch (err) {

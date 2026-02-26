@@ -63,9 +63,9 @@ const AttemptPage = () => {
   };
 
   // ── Save progress to MongoDB (debounced) ────────────────────────────────────
-  const persistProgress = useCallback(async (q, solved) => {
+  const persistProgress = useCallback(async (q, solved, incrementAttempt = false) => {
     setSaveStatus('saving');
-    await ProgressService.save(userId, id, { sqlQuery: q, isCompleted: solved });
+    await ProgressService.save(userId, id, { sqlQuery: q, isCompleted: solved, incrementAttempt });
     setSaveStatus('saved');
     setTimeout(() => setSaveStatus(''), 2000);
   }, [id, userId]);
@@ -123,8 +123,8 @@ const AttemptPage = () => {
       setIsSolved(solved);
       setFeedbackMsg({ ok: solved, text: message });
 
-      // Persist to MongoDB immediately on execute
-      await persistProgress(query, solved);
+      // Persist to MongoDB — incrementAttempt: true so only Run Query counts
+      await persistProgress(query, solved, true);
     } catch (err) {
       setQueryError(err.response?.data?.message || err.message || 'Query execution failed.');
       setResults(null);

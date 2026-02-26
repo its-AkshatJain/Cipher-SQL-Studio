@@ -51,18 +51,24 @@ router.get('/:sessionId/:assignmentId', async (req, res, next) => {
  */
 router.post('/', async (req, res, next) => {
   try {
-    const { sessionId, assignmentId, sqlQuery, isCompleted } = req.body;
+    const { sessionId, assignmentId, sqlQuery, isCompleted, incrementAttempt } = req.body;
 
     if (!sessionId || !assignmentId) {
       return res.status(400).json({ success: false, message: 'sessionId and assignmentId are required.' });
     }
 
+    const update = {
+      $set: { sqlQuery, isCompleted: isCompleted ?? false, lastAttempt: new Date() },
+    };
+
+    // Only count an attempt when the user actually clicked "Run Query"
+    if (incrementAttempt) {
+      update.$inc = { attemptCount: 1 };
+    }
+
     const progress = await UserProgress.findOneAndUpdate(
       { userId: sessionId, assignmentId },
-      {
-        $set:  { sqlQuery, isCompleted: isCompleted ?? false, lastAttempt: new Date() },
-        $inc:  { attemptCount: 1 },
-      },
+      update,
       { upsert: true, new: true, runValidators: true }
     );
 
