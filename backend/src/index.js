@@ -38,9 +38,22 @@ app.use('/api/execute', queryRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/progress', progressRoutes);
 
-// Health Check
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'active', timestamp: new Date() });
+// Ping — dead-simple keep-alive (hit this with UptimeRobot every 5 min)
+app.get('/api/ping', (req, res) => {
+  res.json({ ok: true, ts: Date.now() });
+});
+
+// Health Check — shows DB connectivity + uptime
+app.get('/health', async (req, res) => {
+  const mongoose = (await import('mongoose')).default;
+  const mongoState = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  res.status(200).json({
+    status:    'ok',
+    uptime:    `${Math.floor(process.uptime())}s`,
+    timestamp: new Date().toISOString(),
+    mongodb:   mongoState[mongoose.connection.readyState] ?? 'unknown',
+    env:       process.env.NODE_ENV,
+  });
 });
 
 // Error Handler
