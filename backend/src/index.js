@@ -12,9 +12,24 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// CORS — only allow requests from the frontend origin
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow server-to-server or same-origin requests (no origin header)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked: ${origin}`));
+    }
+  },
+  credentials: true,
+}));
+
 app.use(helmet());
-app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 
