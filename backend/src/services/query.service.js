@@ -1,46 +1,57 @@
 import { pgPool } from '../config/db.js';
+import Assignment from '../models/Assignment.js';
 
-// Safe schema name whitelist — only allowed schema names can be used
-const ALLOWED_SCHEMAS = new Set([
-  'asgn_high_salary',
-  'asgn_dept_count',
-  'asgn_order_value',
-  'asgn_highest_paid',
-]);
+// Schema name safety regex — only lowercase letters, digits, underscores.
+// This format alone cannot inject SQL into SET search_path.
+const SAFE_SCHEMA_RE = /^[a-z][a-z0-9_]*$/;
 
 class QueryService {
-  /**
-   * Execute a SQL query inside an isolated assignment schema.
-   * Uses ROLLBACK after execution so students can't permanently mutate shared data.
-   * @param {string} sql         - The SQL query from the student
-   * @param {string} pgSchema    - The PostgreSQL schema name for this assignment
-   */
-  async executeQuery(sql, pgSchema = 'public') {
-    // Validate schema name to prevent SQL injection via search_path
-    if (!ALLOWED_SCHEMAS.has(pgSchema)) {
-      throw new Error(`Invalid schema: "${pgSchema}". Query execution aborted.`);
-    }
+  constructor() {
+    this._allowedSchemas = new Set();
+    this._loaded = false;
+  }
 
-    // Basic command-level validation: block destructive DDL
+  /**
+   * Load valid pgSchema values dynamically from MongoDB.
+   * Called once at server startup. Any new assignment added to MongoDB
+   * is automatically valid — no manual code updates needed.
+   */
+  async loadAllowedSchemas() {
+    try {
+      const schemas = await Assignment.distinct('pgSchema');
+      this._allowedSchemas = new Set(schemas.filter(Boolean));
+      this._loaded = true;
+      console.log(`✅ QueryService: ${this._allowedSchemas.size} allowed schemas:`, [...this._allowedSchemas]);
+    } catch (err) {
+      console.warn('⚠️  QueryService: could not load schemas from MongoDB, using regex-only validation.', err.message);
+    }
+  }
+
+  _validateSchema(pgSchema) {
+    // 1. Format check — rejects anything with special characters (prevents SQL injection)
+    if (!pgSchema || !SAFE_SCHEMA_RE.test(pgSchema)) {
+      throw new Error(`Invalid schema name: "${pgSchema}".`);
+    }
+    // 2. Existence check — only schemas that exist in MongoDB are allowed
+    if (this._loaded && !this._allowedSchemas.has(pgSchema)) {
+      throw new Error(`Schema "${pgSchema}" is not registered to any assignment.`);
+    }
+  }
+
+  async executeQuery(sql, pgSchema = 'public') {
+    this._validateSchema(pgSchema);
+
     const forbidden = ['DROP', 'TRUNCATE', 'ALTER', 'GRANT', 'REVOKE', 'CREATE USER', 'CREATE DATABASE', 'CREATE SCHEMA'];
-    const upperSQL = sql.toUpperCase().trim();
-    if (forbidden.some(word => upperSQL.includes(word))) {
+    if (forbidden.some(w => sql.toUpperCase().trim().includes(w))) {
       throw new Error('This operation is not permitted in the sandbox.');
     }
 
     const client = await pgPool.connect();
     try {
       await client.query('BEGIN');
-
-      // Set search_path to the assignment's isolated schema
-      // Students write "SELECT * FROM employees" and it resolves to the right schema
       await client.query(`SET LOCAL search_path TO ${pgSchema}, public;`);
-
       const result = await client.query(sql);
-
-      // ROLLBACK: learning platform — don't let writes persist
       await client.query('ROLLBACK');
-
       return {
         rows:     result.rows,
         rowCount: result.rowCount,

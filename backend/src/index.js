@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { connectMongoDB } from './config/db.js';
+import QueryService from './services/query.service.js';
 import queryRoutes from './routes/query.routes.js';
 import assignmentRoutes from './routes/assignment.routes.js';
 import progressRoutes from './routes/progress.routes.js';
@@ -69,6 +70,7 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   await connectMongoDB();
+  await QueryService.loadAllowedSchemas(); // build schema whitelist from MongoDB
   app.listen(PORT, () => {
     console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
   });
